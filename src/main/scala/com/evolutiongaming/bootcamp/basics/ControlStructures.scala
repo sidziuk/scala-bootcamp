@@ -1,7 +1,8 @@
 package com.evolutiongaming.bootcamp.basics
 
 import java.io.FileNotFoundException
-
+import java.time.format.TextStyle
+import java.util.Locale
 import scala.annotation.tailrec
 import scala.io.Source
 import scala.util.{Failure, Success, Try}
@@ -32,7 +33,11 @@ object ControlStructures {
   // Exercise. Implement a "Fizz-Buzz" https://en.wikipedia.org/wiki/Fizz_buzz function using the if-else,
   // returning "fizzbuzz" for numbers which divide with 15, "fizz" for those which divide by 3 and "buzz" for
   // those which divide with 5, and returning the input number as a string for other numbers:
-  def fizzBuzz1(n: Int): String = ???
+  def fizzBuzz1(n: Int): String =
+    if (n % 15 == 0) "fizzbuzz"
+    else if (n % 3 == 0) "fizz"
+    else if (n % 5 == 0) "buzz"
+    else n.toString
 
   // Pattern Matching
   //
@@ -45,23 +50,27 @@ object ControlStructures {
   //    case _                              => fallbackResult
   // }
 
+  import java.time.Month
+
   type ErrorMessage = String
-  def monthName(x: Int): Either[ErrorMessage, String] =
+
+  def monthName(x: Int, locale: Locale): Either[ErrorMessage, String] =
     x match {
-      case 1           => Right("January")
-      case 2           => Right("February")
-      case 3           => Right("March")
-      case 4           => Right("April")
-      case 5           => Right("May")
-      case 6           => Right("June")
-      case 7           => Right("July")
-      case 8           => Right("August")
-      case 9           => Right("September")
-      case 10          => Right("October")
-      case 11          => Right("November")
-      case 12          => Right("December")
+//      case 1 => Right("January")
+//      case 2 => Right("February")
+//      case 3 => Right("March")
+//      case 4 => Right("April")
+//      case 5 => Right("May")
+//      case 6 => Right("June")
+//      case 7 => Right("July")
+//      case 8 => Right("August")
+//      case 9 => Right("September")
+//      case 10 => Right("October")
+//      case 11 => Right("November")
+//      case 12 => Right("December")
       case x if x <= 0 => Left(s"Month $x is too small")
-      case x           => Left(s"Month $x is too large")
+      case x if x > 12 => Left(s"Month $x is too large")
+      case x => Right(Month.of(x).getDisplayName(TextStyle.FULL, locale))
     }
 
   // Question. How would you improve `monthName`?
@@ -71,7 +80,9 @@ object ControlStructures {
 
   object Shape {
     case object Origin extends Shape
+
     final case class Circle(radius: Double) extends Shape
+
     final case class Rectangle(width: Double, height: Double) extends Shape
   }
 
@@ -79,33 +90,38 @@ object ControlStructures {
 
   // Typed Pattern
   def matchOnShape1(s: Shape): String = s match {
-    case Origin               => s"Found the origin."
-    case circle: Circle       => s"Found a circle $circle."
+    case Origin => s"Found the origin."
+    case circle: Circle => s"Found a circle $circle."
     case rectangle: Rectangle => s"Found a rectangle $rectangle."
   }
 
   // Exhaustiveness checking (pay attention to compilation warning)
   def matchOnShape2(s: Shape): String = s match {
-    case Origin               => s"Found the origin."
-    case circle: Circle       => s"Found a circle $circle."
+    case Origin => s"Found the origin."
+    case circle: Circle => s"Found a circle $circle."
     //case rectangle: Rectangle => s"Found a rectangle $rectangle."
   }
 
   // Unapply the instance of Shape
   def matchOnShape3(s: Shape): String = s match {
-    case Origin                   => s"Found the origin."
-    case Circle(radius)           => s"Found a circle with radius $radius."
+    case Origin => s"Found the origin."
+    case Circle(radius) => s"Found a circle with radius $radius."
     case Rectangle(width, height) => s"Found a rectangle with width $width and height $height."
   }
 
   def matchOnShape4(s: Shape): String = s match {
-    case Origin                               => s"Found the origin."
-    case circle @ Circle(radius)              => s"Found a circle $circle with radius $radius."
+    case Origin => s"Found the origin."
+    case circle @ Circle(radius) => s"Found a circle $circle with radius $radius."
     case rectangle @ Rectangle(width, height) => s"Found a rectangle $rectangle with width $width and height $height."
   }
 
   // Exercise. Implement a "Fizz-Buzz" function using pattern matching:
-  def fizzBuzz2(n: Int): String = ???
+  def fizzBuzz2(n: Int): String = (n % 3, n % 5) match {
+    case (0, 0) => "FizzBUzz"
+    case (0, _) => "Fizz"
+    case (_, 0) => "BUzz"
+    case _ => n.toString
+  }
 
   // Recursion
   //
@@ -123,9 +139,9 @@ object ControlStructures {
   // @tailrec annotation verifies that a method will be compiled with tail call optimisation.
   @tailrec
   def last[A](list: List[A]): Option[A] = list match {
-    case Nil      => None
+    case Nil => None
     case x :: Nil => Some(x)
-    case _ :: xs  => last(xs)
+    case _ :: xs => last(xs)
   }
 
   // Recursion isn't used that often as it can be replaced with `foldLeft`, `foldRight`,
@@ -239,7 +255,7 @@ object ControlStructures {
   // You can also add `if` guards to `for` comprehensions:
   val e = for {
     x <- a // generator
-    z  = x % 2 // definition
+    z = x % 2 // definition
     if z == 1 // filter expression
     y <- b // generator
   } yield x + y
@@ -254,8 +270,11 @@ object ControlStructures {
 
   trait UserService {
     def validateUserName(name: String): Either[ErrorMessage, Unit]
+
     def findUserId(name: String): Either[ErrorMessage, UserId]
+
     def validateAmount(amount: Amount): Either[ErrorMessage, Unit]
+
     def findBalance(userId: UserId): Either[ErrorMessage, Amount]
 
     /** Upon success, returns the resulting balance */
@@ -264,11 +283,11 @@ object ControlStructures {
 
   // Upon success, should return the remaining amounts on both accounts as a tuple.
   def makeTransfer(
-    service: UserService,
-    fromUserWithName: String,
-    toUserWithName: String,
-    amount: Amount
-  ): Either[ErrorMessage, (Amount, Amount)] = {
+                    service: UserService,
+                    fromUserWithName: String,
+                    toUserWithName: String,
+                    amount: Amount
+                  ): Either[ErrorMessage, (Amount, Amount)] = {
     // Replace with a proper implementation that uses validateUserName on each name,
     // findUserId to find UserId, validateAmount on the amount, findBalance to find previous
     // balances, and then updateAccount for both userId-s (with a positive and negative
@@ -314,12 +333,12 @@ object ControlStructures {
     // This code is only here to illustrate try-catch-finally, it shouldn't be considered as good code
     val source = Source.fromFile(fileName)
     try // executed until an exception happens
-    source.getLines() foreach println
+      source.getLines() foreach println
     catch { // exception handlers
       case e: FileNotFoundException => println(s"Couldn't find the file: $e")
-      case e: Exception             => println(s"Exception occurred: $e")
+      case e: Exception => println(s"Exception occurred: $e")
     } finally // executed even if an exception happens
-    source.close
+      source.close
   }
 
   // Question. What issues can you find with the above `printFile` method?
