@@ -1,6 +1,7 @@
 package dev.codescreen
 
 import scala.io.Source
+import scala.math.log10
 
 object ControlStructuresHomework1 {
   type Error = String
@@ -9,14 +10,23 @@ object ControlStructuresHomework1 {
   // return error message "$age is too high, are you human?" if age is higher than 150
   // return error message "$age is negative, we do not serve unborn people" if age is lower than 0
   // use if-else
-  def isAdultIf(age: Int): Either[Error, Boolean] = ???
+  def isAdultIf(age: Int): Either[Error, Boolean] =
+    if (age < 0) Left(s"$age is negative, we do not serve unborn people")
+    else if (age < 18) Right(false)
+    else if (age <= 150) Right(true)
+    else Left(s"$age is too high, are you human?")
 
   // same as isAdultIf, but use match statement instead
-  def isAdultMatch(age: Int): Either[Error, Boolean] = ???
+  def isAdultMatch(age: Int): Either[Error, Boolean] = age match {
+    case age if age < 0 => Left(s"$age is negative, we do not serve unborn people")
+    case age if age < 18 => Right(false)
+    case age if age <= 150 => Right(true)
+    case _ => Left(s"$age is too high, are you human?")
+  }
 
   // https://en.wikipedia.org/wiki/Triangle_inequality, consider degenerate triangles invalid
   // can you do it without using any control structures?
-  def isValidTriangle(a: Double, b: Double, c: Double): Boolean = ???
+  def isValidTriangle(a: Double, b: Double, c: Double): Boolean = (a - b).abs < c && c < a + b
 
   // IT company located in Wakanda is searching for a new programmer. Due to high interest it needs
   // a way to filter out candidates that are not suitable for this job.
@@ -41,5 +51,28 @@ object ControlStructuresHomework1 {
     yearsOfExperience: Int,
     hasEducation: Boolean,
     starsOnGithub: Int
-  ): Boolean = ???
+  ): Boolean = {
+
+    lazy val countryPoints = country match {
+      case "Wakanda" => 3
+      case "Narnia" | "Skyrim" | "Amestris" => 1
+      case _ => 0
+    }
+
+    val passedTestsPoints = if (passedTests < 5) -1 else passedTests - 5
+
+    lazy val yearsOfExperiencePoints = if (yearsOfExperience <= 5) yearsOfExperience else 5
+
+    lazy val hasEducationPoints = if (hasEducation) 3 else 0
+
+    lazy val starsOnGithubPoints = if (starsOnGithub == 0) 0 else log10(starsOnGithub).toInt
+
+    lazy val sum = countryPoints + passedTestsPoints + yearsOfExperiencePoints + hasEducationPoints + starsOnGithubPoints
+
+    println(s"$countryPoints, $passedTestsPoints, $yearsOfExperiencePoints, $hasEducationPoints, $starsOnGithubPoints")
+    println(sum)
+
+    if (passedTestsPoints == -1 | sum < 10) false else true
+
+  }
 }
