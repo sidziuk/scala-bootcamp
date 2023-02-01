@@ -1,5 +1,7 @@
 package com.evolutiongaming.bootcamp.basics
 
+import com.evolutiongaming.bootcamp.basics.ControlStructures.ErrorMessage
+
 import java.io.FileNotFoundException
 import java.time.format.TextStyle
 import java.util.Locale
@@ -56,18 +58,18 @@ object ControlStructures {
 
   def monthName(x: Int, locale: Locale): Either[ErrorMessage, String] =
     x match {
-//      case 1 => Right("January")
-//      case 2 => Right("February")
-//      case 3 => Right("March")
-//      case 4 => Right("April")
-//      case 5 => Right("May")
-//      case 6 => Right("June")
-//      case 7 => Right("July")
-//      case 8 => Right("August")
-//      case 9 => Right("September")
-//      case 10 => Right("October")
-//      case 11 => Right("November")
-//      case 12 => Right("December")
+      //      case 1 => Right("January")
+      //      case 2 => Right("February")
+      //      case 3 => Right("March")
+      //      case 4 => Right("April")
+      //      case 5 => Right("May")
+      //      case 6 => Right("June")
+      //      case 7 => Right("July")
+      //      case 8 => Right("August")
+      //      case 9 => Right("September")
+      //      case 10 => Right("October")
+      //      case 11 => Right("November")
+      //      case 12 => Right("December")
       case x if x <= 0 => Left(s"Month $x is too small")
       case x if x > 12 => Left(s"Month $x is too large")
       case x => Right(Month.of(x).getDisplayName(TextStyle.FULL, locale))
@@ -111,8 +113,8 @@ object ControlStructures {
 
   def matchOnShape4(s: Shape): String = s match {
     case Origin => s"Found the origin."
-    case circle @ Circle(radius) => s"Found a circle $circle with radius $radius."
-    case rectangle @ Rectangle(width, height) => s"Found a rectangle $rectangle with width $width and height $height."
+    case circle@Circle(radius) => s"Found a circle $circle with radius $radius."
+    case rectangle@Rectangle(width, height) => s"Found a rectangle $rectangle with width $width and height $height."
   }
 
   // Exercise. Implement a "Fizz-Buzz" function using pattern matching:
@@ -165,200 +167,247 @@ object ControlStructures {
   //
   // Thus `applyNTimesForInts(_ + 1, 4)(3)` should return `((((3 + 1) + 1) + 1) + 1)` or `7`.
   def applyNTimesForInts(f: Int => Int, n: Int): Int => Int = { x: Int =>
-    f(x + n) // replace with a correct implementation
+    @tailrec
+    def loop(n: Int, acc: Int): Int = n match {
+      case 0 => acc
+      case _ => loop(n - 1, f(acc))
+    }
+
+    loop(n, x)
+
   }
 
-  // Exercise: Convert the function `applyNTimesForInts` into a polymorphic function `applyNTimes`:
-  def applyNTimes[A](f: A => A, n: Int): A => A = { x: A =>
-    // replace with correct implementation
-    println(n)
-    f(x)
-  }
+  //f(x + n) // replace with a correct implementation
 
-  // `map`, `flatMap` and `filter` are not control structures, but methods that various collections (and
-  // not only collections) have. We will discuss them now as they are important to understand a key
-  // control structure called "for comprehensions".
-
-  // `map` is a higher order function which - in case of collections - transforms each element of the
-  // collection into a different element (and returns the resulting collection)
-
-  // For example, for `List` it is defined as
-  object list_map_example { // name-spacing to not break other code in this lesson
-    class List[A] {
-      def map[B](f: A => B): List[B] = ???
+  @tailrec
+  def applyNTimesForInts1(f: Int => Int, n: Int, f1: Int => Int = x => x): Int => Int = {
+    n match {
+      case 0 => _ => n
+      case 1 => x => f1(f(x))
+      case _ => applyNTimesForInts1(f, n - 1, x => f1(f(x)))
     }
   }
 
-  // Question. What is the value of this code?
-  val listMapExample = List(1, 2, 3).map(x => x * 2)
+//object main extends App{
+//
+//  @tailrec
+//  def applyNTimesForInts1(f: Int => Int, n: Int): Int => Int = {
+//    n match {
+//      case 0 => f
+//      case _ => applyNTimesForInts1(x => f(f(x)), n - 1)
+//    }
+//  }
+//  val oo = applyNTimesForInts1(x => x + 1, 4)(3)
+//  println(oo)
+//}
 
-  // As we will see in later lessons, `map` is a method that `Functor`-s have, and there are more `Functor`-s
-  // than just collections (`IO`, `Future`, `Either`, `Option` are all `Functor`-s too).
+//f(x + n) // replace with a correct implementation
 
-  // For now, we will have a utilitarian focus and not go into `Functor`-s and other type classes.
+// Exercise: Convert the function `applyNTimesForInts` into a polymorphic function `applyNTimes`:
+def applyNTimes[A](f: A => A, n: Int): A => A = { x: A =>
+  // replace with correct implementation
+  List.range(0, n).foldLeft(x)((acc, _) => f(acc))
+  //  println(n)
+  //  f(x)
+}
 
-  // `flatMap` is a higher order function which - for collections - transforms each element of the collection
-  // into a collection, and then `flatten`-s these collections.
+// `map`, `flatMap` and `filter` are not control structures, but methods that various collections (and
+// not only collections) have. We will discuss them now as they are important to understand a key
+// control structure called "for comprehensions".
 
-  // For example, for `List` it could be defined as:
-  object list_flatmap_example { // name-spacing to not break other code in this lesson
-    class List[A] {
-      def flatMap[B](f: A => List[B]): List[B] = ???
-    }
+// `map` is a higher order function which - in case of collections - transforms each element of the
+// collection into a different element (and returns the resulting collection)
+
+// For example, for `List` it is defined as
+object list_map_example { // name-spacing to not break other code in this lesson
+  class List[A] {
+    def map[B](f: A => B): List[B] = ???
   }
+}
 
-  // Question. What is the value of this code?
-  val listFlatMapExample = List(1, 2, 3).flatMap(x => List(x, x * 2))
+// Question. What is the value of this code?
+val listMapExample = List(1, 2, 3).map(x => x * 2)
 
-  // Question. Do you think only collections can have `flatMap`?
+// As we will see in later lessons, `map` is a method that `Functor`-s have, and there are more `Functor`-s
+// than just collections (`IO`, `Future`, `Either`, `Option` are all `Functor`-s too).
 
-  // `filter` takes a predicate function returning a boolean and - for collections - returns a collection
-  // with only these elements which satisfy this predicate.
+// For now, we will have a utilitarian focus and not go into `Functor`-s and other type classes.
 
-  // For example, for `List` it is defined as:
-  object list_filter_example {
-    class List[A] {
-      def filter(p: A => Boolean): List[A] = ???
-    }
+// `flatMap` is a higher order function which - for collections - transforms each element of the collection
+// into a collection, and then `flatten`-s these collections.
+
+// For example, for `List` it could be defined as:
+object list_flatmap_example { // name-spacing to not break other code in this lesson
+  class List[A] {
+    def flatMap[B](f: A => List[B]): List[B] = ???
   }
+}
 
-  // Question. What is the value of this code?
-  val listFilterExample = List(1, 2, 3).filter(_ % 2 == 0)
+// Question. What is the value of this code?
+val listFlatMapExample = List(1, 2, 3).flatMap(x => List(x, x * 2))
 
-  // For Comprehensions
+// Question. Do you think only collections can have `flatMap`?
 
-  // A `for-yield` syntax is syntactic sugar for composing multiple `map`, `flatMap` and `filter` operations
-  // together in a more readable form.
+// `filter` takes a predicate function returning a boolean and - for collections - returns a collection
+// with only these elements which satisfy this predicate.
 
-  // val result = for {
-  //   x <- a
-  //   y <- b
-  // } yield x + y
-  //
-  // gets translated to
-  //
-  // val result = a.flatMap(x => b.map(y => x + y))
-
-  private val a = List(1, 2, 3)
-  private val b = List(10, 100)
-
-  val c = for {
-    x <- a
-    y <- b
-  } yield x * y
-
-  val d = a.flatMap(x => b.map(y => x * y))
-
-  // Question: What is the value of `c` above?
-  // Question: What is the value of `d` above?
-
-  // You can also add `if` guards to `for` comprehensions:
-  val e = for {
-    x <- a // generator
-    z = x % 2 // definition
-    if z == 1 // filter expression
-    y <- b // generator
-  } yield x + y
-
-  // Question. What is the value of `e` above?
-
-  // In idiomatic functional Scala, much of the code ends up written in "for comprehensions".
-  // Exercise. Implement `makeTransfer` using `for` comprehensions and the methods provided in `UserService`.
-
-  type UserId = String
-  type Amount = BigDecimal
-
-  trait UserService {
-    def validateUserName(name: String): Either[ErrorMessage, Unit]
-
-    def findUserId(name: String): Either[ErrorMessage, UserId]
-
-    def validateAmount(amount: Amount): Either[ErrorMessage, Unit]
-
-    def findBalance(userId: UserId): Either[ErrorMessage, Amount]
-
-    /** Upon success, returns the resulting balance */
-    def updateAccount(userId: UserId, previousBalance: Amount, delta: Amount): Either[ErrorMessage, Amount]
+// For example, for `List` it is defined as:
+object list_filter_example {
+  class List[A] {
+    def filter(p: A => Boolean): List[A] = ???
   }
+}
 
-  // Upon success, should return the remaining amounts on both accounts as a tuple.
-  def makeTransfer(
-                    service: UserService,
-                    fromUserWithName: String,
-                    toUserWithName: String,
-                    amount: Amount
-                  ): Either[ErrorMessage, (Amount, Amount)] = {
-    // Replace with a proper implementation that uses validateUserName on each name,
-    // findUserId to find UserId, validateAmount on the amount, findBalance to find previous
-    // balances, and then updateAccount for both userId-s (with a positive and negative
-    // amount, respectively):
-    println(s"$service, $fromUserWithName, $toUserWithName, $amount")
-    import service._
-    ???
-  }
+// Question. What is the value of this code?
+val listFilterExample = List(1, 2, 3).filter(_ % 2 == 0)
 
-  // Question. What are the questions would you ask - especially about requirements - before implementing
-  // this function? What issues does this implementation have?
+// For Comprehensions
 
-  // Question. Does the implementation of `makeTransfer` depend on the "container" being an `Either`?
+// A `for-yield` syntax is syntactic sugar for composing multiple `map`, `flatMap` and `filter` operations
+// together in a more readable form.
 
-  // Let us return to our "intuition about types" exercises from before.
+// val result = for {
+//   x <- a
+//   y <- b
+// } yield x + y
+//
+// gets translated to
+//
+// val result = a.flatMap(x => b.map(y => x + y))
 
-  // Exercise:
-  //
-  // Given:
-  //  A = Set(0, 1, 2)
-  //  B = Set(true, false)
-  //
-  // List all the elements in `A * B`.
-  //
-  // Use a "for comprehension" in your solution.
+private val a = List(1, 2, 3)
+private val b = List(10, 100)
 
-  val AProductB: Set[(Int, Boolean)] = Set()
+val c = for {
+  x <- a
+  y <- b
+} yield x * y
 
-  // Exercise:
-  //
-  // Given:
-  // A = { 0, 1, 2 }
-  // B = { true, false }
-  //
-  // List all the elements in `A + B`.
-  //
-  // Use "map" and `++` (`Set` union operation) in your solution.
+val d = a.flatMap(x => b.map(y => x * y))
 
-  val ASumB: Set[Either[Int, Boolean]] = Set()
+// Question: What is the value of `c` above?
+// Question: What is the value of `d` above?
 
-  // Scala inherits the standard try-catch-finally construct from Java:
-  def printFile(fileName: String): Unit = {
-    // This code is only here to illustrate try-catch-finally, it shouldn't be considered as good code
-    val source = Source.fromFile(fileName)
-    try // executed until an exception happens
-      source.getLines() foreach println
-    catch { // exception handlers
-      case e: FileNotFoundException => println(s"Couldn't find the file: $e")
-      case e: Exception => println(s"Exception occurred: $e")
-    } finally // executed even if an exception happens
-      source.close
-  }
+// You can also add `if` guards to `for` comprehensions:
+val e = for {
+  x <- a // generator
+  z = x % 2 // definition
+  if z == 1 // filter expression
+  y <- b // generator
+} yield x + y
 
-  // Question. What issues can you find with the above `printFile` method?
+// Question. What is the value of `e` above?
 
-  // However, in idiomatic functional Scala, other error handling mechanisms are usually used.
-  // Throwing exceptions is an anti-pattern - it introduces another exit path from a function and breaks
-  // referential transparency.
-  // It can be thought of as a "`goto` to an unknown place up the call stack".
+// In idiomatic functional Scala, much of the code ends up written in "for comprehensions".
+// Exercise. Implement `makeTransfer` using `for` comprehensions and the methods provided in `UserService`.
 
-  // One of these other mechanisms is `Try[A]` which can be thought of as an `Either[Throwable, A]`:
+type UserId = String
+type Amount = BigDecimal
 
-  def parseInt1(x: String): Try[Int] = Try(x.toInt)
+trait UserService {
+  def validateUserName(name: String): Either[ErrorMessage, Unit]
 
-  parseInt1("asdf") match {
-    case Success(value) => println(value)
-    case Failure(error) => println(error)
-  }
+  def findUserId(name: String): Either[ErrorMessage, UserId]
 
-  // Question. What other ways of representing the "parse string to integer" results can you think of?
-  // What are the benefits and drawbacks of each?
+  def validateAmount(amount: Amount): Either[ErrorMessage, Unit]
 
-  // For homework, refer to `ControlStructuresHomework`
+  def findBalance(userId: UserId): Either[ErrorMessage, Amount]
+
+  /** Upon success, returns the resulting balance */
+  def updateAccount(userId: UserId, previousBalance: Amount, delta: Amount): Either[ErrorMessage, Amount]
+}
+
+// Upon success, should return the remaining amounts on both accounts as a tuple.
+def makeTransfer(
+                  service: UserService,
+                  fromUserWithName: String,
+                  toUserWithName: String,
+                  amount: Amount
+                ): Either[ErrorMessage, (Amount, Amount)] = {
+  // Replace with a proper implementation that uses validateUserName on each name,
+  // findUserId to find UserId, validateAmount on the amount, findBalance to find previous
+  // balances, and then updateAccount for both userId-s (with a positive and negative
+  // amount, respectively):
+  println(s"$service, $fromUserWithName, $toUserWithName, $amount")
+  import service._
+  for {
+    _                  <- validateUserName(fromUserWithName)
+    _                  <- validateUserName(toUserWithName)
+    fromUserId         <- findUserId(fromUserWithName)
+    toUserId           <- findUserId(toUserWithName)
+    _                  <- validateAmount(amount)
+    fromUserBalance    <- findBalance(fromUserId)
+    toUserBalance      <- findBalance(toUserId)
+    newFromUserBalance <- updateAccount(fromUserId, fromUserBalance, -amount)
+    newToUserBalance   <- updateAccount(toUserId, toUserBalance, amount)
+  } yield (newFromUserBalance, newToUserBalance)
+}
+
+// Question. What are the questions would you ask - especially about requirements - before implementing
+// this function? What issues does this implementation have?
+
+// Question. Does the implementation of `makeTransfer` depend on the "container" being an `Either`?
+
+// Let us return to our "intuition about types" exercises from before.
+
+// Exercise:
+//
+// Given:
+  val A = Set(0, 1, 2)
+  val B = Set(true, false)
+//
+// List all the elements in `A * B`.
+//
+// Use a "for comprehension" in your solution.
+
+val AProductB: Set[(Int, Boolean)] = for {
+  a <- A
+  b <- B
+} yield (a, b)
+
+// Exercise:
+//
+// Given:
+// A = { 0, 1, 2 }
+// B = { true, false }
+//
+// List all the elements in `A + B`.
+//
+// Use "map" and `++` (`Set` union operation) in your solution.
+
+val ASumB: Set[Either[Int, Boolean]] = A.map(Left.apply) ++ B.map(Right.apply)
+
+// Scala inherits the standard try-catch-finally construct from Java:
+def printFile(fileName: String): Unit = {
+  // This code is only here to illustrate try-catch-finally, it shouldn't be considered as good code
+  val source = Source.fromFile(fileName)
+  try // executed until an exception happens
+    source.getLines() foreach println
+  catch { // exception handlers
+    case e: FileNotFoundException => println(s"Couldn't find the file: $e")
+    case e: Exception => println(s"Exception occurred: $e")
+  } finally // executed even if an exception happens
+    source.close
+}
+
+// Question. What issues can you find with the above `printFile` method?
+
+// However, in idiomatic functional Scala, other error handling mechanisms are usually used.
+// Throwing exceptions is an anti-pattern - it introduces another exit path from a function and breaks
+// referential transparency.
+// It can be thought of as a "`goto` to an unknown place up the call stack".
+
+// One of these other mechanisms is `Try[A]` which can be thought of as an `Either[Throwable, A]`:
+
+def parseInt1(x: String): Try[Int] = Try(x.toInt)
+
+parseInt1("asdf") match {
+  case Success(value) => println(value)
+  case Failure(error) => println(error)
+}
+
+// Question. What other ways of representing the "parse string to integer" results can you think of?
+// What are the benefits and drawbacks of each?
+
+// For homework, refer to `ControlStructuresHomework`
 }
