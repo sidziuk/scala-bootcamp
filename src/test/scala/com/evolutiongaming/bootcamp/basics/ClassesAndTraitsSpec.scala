@@ -27,6 +27,6 @@ class ClassesAndTraitsSpec extends AnyFlatSpec with ScalaCheckDrivenPropertyChec
     val entity2 = new HasBalance { def balance: Double = 200 }
     val entity3 = new HasBalance { def balance: Double = 500 }
 
-    totalBalance(List(entity1, entity2, entity3)) shouldBe 800
+    totalBalance(List(entity1, entity2, entity3)).balance shouldBe 800
   }
 }

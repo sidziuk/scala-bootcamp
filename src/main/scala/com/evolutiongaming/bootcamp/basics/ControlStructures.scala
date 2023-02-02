@@ -119,9 +119,9 @@ object ControlStructures {
 
   // Exercise. Implement a "Fizz-Buzz" function using pattern matching:
   def fizzBuzz2(n: Int): String = (n % 3, n % 5) match {
-    case (0, 0) => "FizzBUzz"
-    case (0, _) => "Fizz"
-    case (_, 0) => "BUzz"
+    case (0, 0) => "fizzbuzz"
+    case (0, _) => "fizz"
+    case (_, 0) => "buzz"
     case _ => n.toString
   }
 
