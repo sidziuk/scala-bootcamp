@@ -1,17 +1,19 @@
 package com.evolutiongaming.bootcamp.http
 
 import cats.data.{EitherT, Validated}
-import cats.effect.{ExitCode, IO, IOApp}
+import cats.effect.{Clock, ExitCode, IO, IOApp}
 import cats.syntax.all._
+import com.comcast.ip4s._
 import com.evolutiongaming.bootcamp.http.Protocol._
 import org.http4s._
-import org.http4s.blaze.client._
-import org.http4s.blaze.server._
+import org.http4s.ember.client._
+import org.http4s.ember.server._
 import org.http4s.client.dsl.io._
 import org.http4s.dsl.io._
 import org.http4s.headers._
 import org.http4s.implicits._
 import org.http4s.multipart.{Multipart, Multiparts, Part}
+import org.http4s.server.middleware.ErrorHandling
 import org.typelevel.ci.CIString
 
 import java.time.{Instant, LocalDate}
@@ -211,10 +213,12 @@ object HttpServer extends IOApp {
 
       // curl -XPOST "localhost:9001/json" -d '{"name": "John", "age": 18}' -H "Content-Type: application/json"
       case req @ POST -> Root / "json" =>
-        req.as[User].flatMap { user =>
-          val greeting = Greeting(text = s"Hello, ${user.name}!", timestamp = Instant.now())
-          Ok(greeting)
-        }
+        for {
+          user      <- req.as[User]
+          timestamp <- Clock[IO].realTimeInstant
+          greeting   = Greeting(s"Hello, ${user.name}!", timestamp)
+          response  <- Ok(greeting)
+        } yield response
     }
   }
 
@@ -263,23 +267,25 @@ object HttpServer extends IOApp {
       }
   }
 
-  private[http] val httpApp = Seq(
-    helloRoutes,
-    paramsRoutes,
-    headersRoutes,
-    jsonRoutes,
-    entityRoutes,
-    multipartRoutes,
-  ).reduce(_ <+> _).orNotFound
+  private[http] val httpApp = ErrorHandling {
+    Seq(
+      helloRoutes,
+      paramsRoutes,
+      headersRoutes,
+      jsonRoutes,
+      entityRoutes,
+      multipartRoutes,
+    ).reduce(_ <+> _)
+  }.orNotFound
 
   override def run(args: List[String]): IO[ExitCode] =
-    BlazeServerBuilder[IO]
-      .bindHttp(port = 9001, host = "localhost")
+    EmberServerBuilder
+      .default[IO]
+      .withHost(ipv4"127.0.0.1")
+      .withPort(port"9001")
       .withHttpApp(httpApp)
-      .serve
-      .compile
-      .drain
-      .as(ExitCode.Success)
+      .build
+      .useForever
 }
 
 object HttpClient extends IOApp {
@@ -291,7 +297,9 @@ object HttpClient extends IOApp {
   private def printLine(string: String = ""): IO[Unit] = IO(println(string))
 
   def run(args: List[String]): IO[ExitCode] =
-    BlazeClientBuilder[IO].resource
+    EmberClientBuilder
+      .default[IO]
+      .build
       .use { client =>
         for {
           _ <- printLine(string = "Executing simple GET and POST requests:")
@@ -337,7 +345,7 @@ object HttpClient extends IOApp {
             import org.http4s.circe.CirceEntityCodec._
 
             // User JSON encoder can also be declared explicitly instead of importing from `CirceEntityCodec`:
-            // implicit val helloEncoder = org.http4s.circe.jsonEncoderOf[IO, Hello]
+            // implicit val helloEncoder = org.http4s.circe.jsonEncoderOf[IO, User]
 
             client
               .expect[Greeting](Method.POST(User("John", 18), uri / "json"))
